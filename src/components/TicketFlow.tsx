@@ -268,6 +268,15 @@ export default function TicketFlow() {
                   className="h-auto w-full"
                 />
               </div>
+              <p className="rounded-lg border border-[#8ed8e8]/20 bg-[#8ed8e8]/5 px-4 py-3 text-sm leading-relaxed text-white/70">
+                La entrada es gratuita, pero podés contribuir a la causa en este
+                alias{" "}
+                <strong className="tracking-wide text-[#8ed8e8]">
+                  CICLO.DISONANCIA
+                </strong>
+                , a nombre de{" "}
+                <strong className="text-white">Nicolas Enrique Alonso</strong>
+              </p>
             </div>
           )}
 
