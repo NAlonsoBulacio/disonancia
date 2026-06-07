@@ -19,6 +19,9 @@ export const EVENT = {
 export const CONFIRMATION_MESSAGE =
   "te esperamos el sábado, podés llevar un regalo para el maikel chango";
 
+export const CONTRIBUTION_MESSAGE =
+  "La entrada es gratuita, pero podés contribuir a la causa en este alias CICLO.DISONANCIA, a nombre de Nicolas Enrique Alonso";
+
 export const MAX_TICKETS_PER_EMAIL = 3;
 
 export const CODE_EXPIRY_MINUTES = 15;

@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import path from "path";
 import nodemailer from "nodemailer";
-import { CONFIRMATION_MESSAGE, EVENT } from "./config";
+import { CONFIRMATION_MESSAGE, CONTRIBUTION_MESSAGE, EVENT } from "./config";
 
 function getTransporter() {
   const host = process.env.SMTP_HOST;
@@ -125,6 +125,11 @@ function buildTicketEmailHtml(numbers: string[]) {
               <td style="padding: 0 24px 20px; border-top: 2px dashed rgba(142,216,232,0.35);">
                 <p style="margin: 20px 0 16px; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.85); text-align: center;">${CONFIRMATION_MESSAGE}</p>
                 <img src="cid:maikel-chango" alt="Maikel Chango" width="320" style="display: block; max-width: 100%; height: auto; border-radius: 10px; margin: 0 auto; border: 1px solid rgba(142,216,232,0.25);" />
+                <p style="margin: 20px 0 0; font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.7); text-align: center; padding: 14px; border: 1px solid rgba(142,216,232,0.2); border-radius: 8px; background: #0a0a0a;">
+                  La entrada es gratuita, pero podés contribuir a la causa en este alias
+                  <strong style="color: #8ed8e8; letter-spacing: 1px;">CICLO.DISONANCIA</strong>,
+                  a nombre de <strong style="color: #fff;">Nicolas Enrique Alonso</strong>
+                </p>
               </td>
             </tr>
 
@@ -165,6 +170,8 @@ export async function sendTicketsConfirmation(
     CONFIRMATION_MESSAGE,
     `──────────────────────────────`,
     ``,
+    CONTRIBUTION_MESSAGE,
+    ``,
     `Presentá este correo en la entrada.`,
   ].join("\n");
 
@@ -174,6 +181,7 @@ export async function sendTicketsConfirmation(
     if (process.env.NODE_ENV === "development") {
       console.log(`[DEV] Tickets para ${email}: ${numbers.join(", ")}`);
       console.log(`[DEV] ${CONFIRMATION_MESSAGE}`);
+      console.log(`[DEV] ${CONTRIBUTION_MESSAGE}`);
       return;
     }
     throw new Error("SMTP no configurado");
