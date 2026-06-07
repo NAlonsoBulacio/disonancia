@@ -1,5 +1,7 @@
+import { readFileSync } from "fs";
+import path from "path";
 import nodemailer from "nodemailer";
-import { EVENT } from "./config";
+import { CONFIRMATION_MESSAGE, EVENT } from "./config";
 
 function getTransporter() {
   const host = process.env.SMTP_HOST;
@@ -28,6 +30,15 @@ const emailWrapper = (content: string) => `
     <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.4);">${EVENT.venue} · ${EVENT.address}<br/>${EVENT.date} · ${EVENT.time}</p>
   </div>
 `;
+
+function getMaikelChangoAttachment() {
+  const imagePath = path.join(process.cwd(), "public", "maikel-chango.png");
+  return {
+    filename: "maikel-chango.png",
+    content: readFileSync(imagePath),
+    cid: "maikel-chango",
+  };
+}
 
 export async function sendVerificationCode(email: string, code: string) {
   const transporter = getTransporter();
@@ -60,6 +71,77 @@ export async function sendVerificationCode(email: string, code: string) {
   await transporter.sendMail({ from, to: email, subject, text, html });
 }
 
+function buildTicketEmailHtml(numbers: string[]) {
+  const ticketNumbersHtml = numbers
+    .map(
+      (n) => `
+      <tr>
+        <td align="center" style="padding: 10px 0;">
+          <div style="display: inline-block; border: 2px solid #8ed8e8; border-radius: 8px; padding: 14px 32px; background: #0a0a0a;">
+            <p style="margin: 0 0 4px; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.45); font-family: Arial, sans-serif;">N° de entrada</p>
+            <p style="margin: 0; font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #8ed8e8; font-family: 'Courier New', Courier, monospace;">${n}</p>
+          </div>
+        </td>
+      </tr>`,
+    )
+    .join("");
+
+  return `
+  <div style="background: #111; padding: 24px 12px; font-family: Georgia, serif;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 420px; margin: 0 auto;">
+      <tr>
+        <td>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #000; border: 2px solid #8ed8e8; border-radius: 16px; overflow: hidden;">
+            <!-- Header -->
+            <tr>
+              <td style="padding: 28px 24px 20px; text-align: center; border-bottom: 2px dashed rgba(142,216,232,0.35);">
+                <p style="margin: 0 0 4px; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,255,255,0.5); font-family: Arial, sans-serif;">Ciclo</p>
+                <h1 style="margin: 0 0 8px; font-size: 32px; font-weight: normal; text-transform: lowercase; color: #8ed8e8; letter-spacing: 1px;">disonancia</h1>
+                <p style="margin: 0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.4); font-family: Arial, sans-serif;">Entrada gratuita</p>
+              </td>
+            </tr>
+
+            <!-- Event info -->
+            <tr>
+              <td style="padding: 20px 24px; text-align: center; border-bottom: 2px dashed rgba(142,216,232,0.35);">
+                <p style="margin: 0 0 6px; font-size: 15px; color: #fff;">${EVENT.date}</p>
+                <p style="margin: 0 0 6px; font-size: 15px; color: #8ed8e8; font-weight: bold;">${EVENT.time}</p>
+                <p style="margin: 0 0 4px; font-size: 13px; color: rgba(255,255,255,0.7);">${EVENT.venue}</p>
+                <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.45); font-family: Arial, sans-serif;">${EVENT.address}</p>
+              </td>
+            </tr>
+
+            <!-- Ticket numbers -->
+            <tr>
+              <td style="padding: 24px 24px 16px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  ${ticketNumbersHtml}
+                </table>
+              </td>
+            </tr>
+
+            <!-- Perforation + message -->
+            <tr>
+              <td style="padding: 0 24px 20px; border-top: 2px dashed rgba(142,216,232,0.35);">
+                <p style="margin: 20px 0 16px; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.85); text-align: center;">${CONFIRMATION_MESSAGE}</p>
+                <img src="cid:maikel-chango" alt="Maikel Chango" width="320" style="display: block; max-width: 100%; height: auto; border-radius: 10px; margin: 0 auto; border: 1px solid rgba(142,216,232,0.25);" />
+              </td>
+            </tr>
+
+            <!-- Footer stub -->
+            <tr>
+              <td style="padding: 16px 24px 24px; background: #0a0a0a; text-align: center; border-top: 2px dashed rgba(142,216,232,0.35);">
+                <p style="margin: 0 0 6px; font-size: 22px; font-weight: bold; color: #8ed8e8; font-family: Arial, sans-serif; letter-spacing: 2px;">${EVENT.dateShort}</p>
+                <p style="margin: 0; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); font-family: Arial, sans-serif;">Presentá este correo en la entrada</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+}
+
 export async function sendTicketsConfirmation(
   email: string,
   ticketNumbers: number[],
@@ -70,31 +152,39 @@ export async function sendTicketsConfirmation(
 
   const subject = `Tus entradas — ${EVENT.name}`;
   const text = [
-    `¡Listo! Reservaste ${ticketNumbers.length} entrada(s) para ${EVENT.name}.`,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    `  CICLO DISONANCIA — ENTRADA`,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
     ``,
-    `Fecha: ${EVENT.date} · ${EVENT.time}`,
-    `Lugar: ${EVENT.venue}, ${EVENT.address}`,
+    `${EVENT.date} · ${EVENT.time}`,
+    `${EVENT.venue}, ${EVENT.address}`,
     ``,
-    `Tickets: ${numbers.join(", ")}`,
+    ...numbers.map((n) => `  TICKET ${n}`),
+    ``,
+    `──────────────────────────────`,
+    CONFIRMATION_MESSAGE,
+    `──────────────────────────────`,
     ``,
     `Presentá este correo en la entrada.`,
   ].join("\n");
 
-  const html = emailWrapper(`
-    <p style="font-size: 18px; color: #8ed8e8;">¡Entradas confirmadas!</p>
-    <ul style="list-style: none; padding: 0; margin: 16px 0;">
-      ${numbers.map((n) => `<li style="font-size: 22px; font-family: monospace; color: #8ed8e8; margin: 10px 0; padding: 12px; border: 1px solid rgba(142,216,232,0.3); border-radius: 6px; text-align: center;">${n}</li>`).join("")}
-    </ul>
-    <p style="font-size: 13px; color: rgba(255,255,255,0.5);">Presentá este correo en la entrada.</p>
-  `);
+  const html = buildTicketEmailHtml(numbers);
 
   if (!transporter || !from) {
     if (process.env.NODE_ENV === "development") {
       console.log(`[DEV] Tickets para ${email}: ${numbers.join(", ")}`);
+      console.log(`[DEV] ${CONFIRMATION_MESSAGE}`);
       return;
     }
     throw new Error("SMTP no configurado");
   }
 
-  await transporter.sendMail({ from, to: email, subject, text, html });
+  await transporter.sendMail({
+    from,
+    to: email,
+    subject,
+    text,
+    html,
+    attachments: [getMaikelChangoAttachment()],
+  });
 }

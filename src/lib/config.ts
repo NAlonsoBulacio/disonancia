@@ -16,6 +16,9 @@ export const EVENT = {
     "Reservá tus entradas gratuitas. Verificamos tu correo para que cada persona reciba sus tickets.",
 } as const;
 
+export const CONFIRMATION_MESSAGE =
+  "te esperamos el sábado, podés llevar un regalo para el maikel chango";
+
 export const MAX_TICKETS_PER_EMAIL = 3;
 
 export const CODE_EXPIRY_MINUTES = 15;

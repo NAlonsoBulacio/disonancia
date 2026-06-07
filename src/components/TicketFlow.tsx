@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
-import { MAX_TICKETS_PER_EMAIL } from "@/lib/config";
+import { CONFIRMATION_MESSAGE, MAX_TICKETS_PER_EMAIL } from "@/lib/config";
 
 type Step = "email" | "code" | "claim" | "done";
 
@@ -251,6 +252,23 @@ export default function TicketFlow() {
                 </li>
               ))}
             </ul>
+          )}
+
+          {tickets.length > 0 && (
+            <div className="space-y-4 pt-2">
+              <p className="text-sm leading-relaxed text-white/80">
+                {CONFIRMATION_MESSAGE}
+              </p>
+              <div className="mx-auto max-w-xs overflow-hidden rounded-xl border border-white/15 shadow-lg">
+                <Image
+                  src="/maikel-chango.png"
+                  alt="Maikel Chango — Thriller"
+                  width={400}
+                  height={400}
+                  className="h-auto w-full"
+                />
+              </div>
+            </div>
           )}
 
           {remaining > 0 && token && (
