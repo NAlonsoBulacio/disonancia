@@ -17,6 +17,27 @@ export async function getTicketsForEmail(email: string) {
   });
 }
 
+export async function getAllTickets() {
+  return prisma.ticket.findMany({
+    orderBy: { ticketNumber: "asc" },
+  });
+}
+
+export async function getTicketStats() {
+  const [total, emails] = await Promise.all([
+    prisma.ticket.count(),
+    prisma.ticket.findMany({
+      distinct: ["email"],
+      select: { email: true },
+    }),
+  ]);
+
+  return {
+    total,
+    uniqueEmails: emails.length,
+  };
+}
+
 async function getNextTicketNumber() {
   const last = await prisma.ticket.findFirst({
     orderBy: { ticketNumber: "desc" },
