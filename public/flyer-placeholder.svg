@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" fill="none">
+  <rect width="400" height="500" fill="#2a181f"/>
+  <rect x="24" y="24" width="352" height="452" rx="12" stroke="#6b1d3a" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="200" y="220" text-anchor="middle" fill="#d4a574" font-family="Georgia, serif" font-size="18">Flyer del evento</text>
+  <text x="200" y="260" text-anchor="middle" fill="#9a8a7e" font-family="sans-serif" font-size="14">Reemplazá este archivo</text>
+  <text x="200" y="290" text-anchor="middle" fill="#9a8a7e" font-family="sans-serif" font-size="14">con tu imagen</text>
+  <circle cx="200" cy="360" r="40" stroke="#6b1d3a" stroke-width="2" opacity="0.5"/>
+  <path d="M185 360 L200 375 L220 345" stroke="#d4a574" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>
