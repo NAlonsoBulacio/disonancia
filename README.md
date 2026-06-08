@@ -7,7 +7,7 @@ Aplicación Next.js para reservar entradas gratuitas con verificación de correo
 1. El usuario ingresa su correo electrónico.
 2. Recibe un código de 6 dígitos por email.
 3. Verifica el código.
-4. Reserva hasta **3 tickets por correo**, cada uno con un número único.
+4. Reserva **1 ticket por correo** (hasta **170** en total), cada uno con un número único.
 
 Los tickets emitidos se guardan en Supabase, en la tabla **`tickets_emitidos`**.
 

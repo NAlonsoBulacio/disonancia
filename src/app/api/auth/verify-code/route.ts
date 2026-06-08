@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { isValidEmail, normalizeEmail, verifyCode } from "@/lib/auth";
-import { getRemainingTicketsForEmail, getTicketsForEmail } from "@/lib/tickets";
+import {
+  getRemainingTicketsForEmail,
+  getTicketAvailability,
+  getTicketsForEmail,
+} from "@/lib/tickets";
 
 export async function POST(request: Request) {
   try {
@@ -31,9 +35,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const [remaining, existingTickets] = await Promise.all([
+    const [remaining, existingTickets, availability] = await Promise.all([
       getRemainingTicketsForEmail(email),
       getTicketsForEmail(email),
+      getTicketAvailability(),
     ]);
 
     return NextResponse.json({
@@ -42,6 +47,8 @@ export async function POST(request: Request) {
       email: session.email,
       remaining,
       tickets: existingTickets.map((t) => t.ticketNumber),
+      available: availability.available,
+      total: availability.total,
     });
   } catch (error) {
     console.error("verify-code error:", error);

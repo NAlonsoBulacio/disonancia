@@ -7,6 +7,7 @@ import {
 import { RESEND_COOLDOWN_SECONDS } from "@/lib/config";
 import { sendVerificationCode } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
+import { getTicketAvailability } from "@/lib/tickets";
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +17,14 @@ export async function POST(request: Request) {
     if (!isValidEmail(email)) {
       return NextResponse.json(
         { error: "Ingresá un correo electrónico válido." },
+        { status: 400 },
+      );
+    }
+
+    const availability = await getTicketAvailability();
+    if (availability.available === 0) {
+      return NextResponse.json(
+        { error: "Se agotaron las entradas." },
         { status: 400 },
       );
     }

@@ -13,6 +13,8 @@ type Ticket = {
 type Stats = {
   total: number;
   uniqueEmails: number;
+  available: number;
+  capacity: number;
 };
 
 function formatTicketNumber(n: number) {
@@ -177,14 +179,23 @@ export default function AdminDashboard() {
         </header>
 
         {stats && (
-          <div className="mb-8 grid grid-cols-2 gap-4 sm:max-w-md">
+          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-[#8ed8e8]/30 bg-[#8ed8e8]/5 p-5">
               <p className="text-xs uppercase tracking-widest text-white/50">
-                Total entradas
+                Emitidas
               </p>
               <p className="mt-2 font-mono text-3xl font-bold text-[#8ed8e8]">
                 {stats.total}
               </p>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-white/[0.03] p-5">
+              <p className="text-xs uppercase tracking-widest text-white/50">
+                Disponibles
+              </p>
+              <p className="mt-2 font-mono text-3xl font-bold text-white">
+                {stats.available}
+              </p>
+              <p className="mt-1 text-xs text-white/40">de {stats.capacity}</p>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/[0.03] p-5">
               <p className="text-xs uppercase tracking-widest text-white/50">

@@ -34,7 +34,14 @@ export async function POST(request: Request) {
     const result = await claimTickets(session.email, quantity);
 
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: result.error,
+          available: result.available,
+          total: result.total,
+        },
+        { status: 400 },
+      );
     }
 
     const ticketNumbers = result.tickets.map((t) => t.ticketNumber);
@@ -49,6 +56,9 @@ export async function POST(request: Request) {
       ok: true,
       tickets: ticketNumbers,
       remaining: result.remaining,
+      available: result.available,
+      sold: result.sold,
+      total: result.total,
     });
   } catch (error) {
     console.error("claim tickets error:", error);

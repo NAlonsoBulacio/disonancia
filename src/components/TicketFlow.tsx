@@ -2,24 +2,43 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { CONFIRMATION_MESSAGE, MAX_TICKETS_PER_EMAIL } from "@/lib/config";
+import { CONFIRMATION_MESSAGE } from "@/lib/config";
 
 type Step = "email" | "code" | "claim" | "done";
+
+type TicketFlowProps = {
+  initialAvailable: number;
+  totalTickets: number;
+};
 
 function formatTicketNumber(n: number) {
   return `#${String(n).padStart(4, "0")}`;
 }
 
-export default function TicketFlow() {
+export default function TicketFlow({
+  initialAvailable,
+  totalTickets,
+}: TicketFlowProps) {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [token, setToken] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [remaining, setRemaining] = useState(MAX_TICKETS_PER_EMAIL);
+  const [available, setAvailable] = useState(initialAvailable);
   const [tickets, setTickets] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const soldOut = available === 0;
+
+  async function refreshAvailability() {
+    try {
+      const res = await fetch("/api/tickets/availability");
+      const data = await res.json();
+      if (res.ok) setAvailable(data.available);
+    } catch {
+      // ignore refresh errors
+    }
+  }
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +56,7 @@ export default function TicketFlow() {
       setStep("code");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
+      await refreshAvailability();
     } finally {
       setLoading(false);
     }
@@ -57,13 +77,14 @@ export default function TicketFlow() {
       if (!res.ok) throw new Error(data.error ?? "Código inválido");
 
       setToken(data.token);
-      setRemaining(data.remaining);
       setTickets(data.tickets ?? []);
+      if (typeof data.available === "number") setAvailable(data.available);
 
       if (data.remaining === 0) {
         setStep("done");
+      } else if (data.available === 0) {
+        setError("Se agotaron las entradas.");
       } else {
-        setQuantity(1);
         setStep("claim");
       }
     } catch (err) {
@@ -82,16 +103,17 @@ export default function TicketFlow() {
       const res = await fetch("/api/tickets/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, quantity }),
+        body: JSON.stringify({ token, quantity: 1 }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudieron reservar");
 
       setTickets((prev) => [...prev, ...data.tickets].sort((a, b) => a - b));
-      setRemaining(data.remaining);
+      if (typeof data.available === "number") setAvailable(data.available);
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
+      await refreshAvailability();
     } finally {
       setLoading(false);
     }
@@ -103,6 +125,19 @@ export default function TicketFlow() {
   const buttonClass =
     "w-full rounded-lg bg-[#8ed8e8] px-4 py-3 font-medium uppercase tracking-wider text-black transition hover:bg-[#a8e4f0] disabled:opacity-50";
 
+  if (soldOut && step === "email") {
+    return (
+      <div className="w-full rounded-xl border border-white/15 bg-white/[0.03] p-8 text-center backdrop-blur-sm">
+        <h2 className="font-display text-xl lowercase text-glow">
+          entradas agotadas
+        </h2>
+        <p className="mt-3 text-sm text-white/50">
+          Se reservaron las {totalTickets} entradas disponibles.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full rounded-xl border border-white/15 bg-white/[0.03] p-8 backdrop-blur-sm">
       {step === "email" && (
@@ -112,8 +147,7 @@ export default function TicketFlow() {
               verificá tu correo
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-white/50">
-              Te enviamos un código de 6 dígitos. Máximo{" "}
-              {MAX_TICKETS_PER_EMAIL} tickets por correo.
+              Te enviamos un código de 6 dígitos. 1 ticket por correo.
             </p>
           </div>
 
@@ -192,35 +226,17 @@ export default function TicketFlow() {
         <form onSubmit={handleClaim} className="space-y-5">
           <div>
             <h2 className="font-display text-xl lowercase text-white">
-              ¿cuántas entradas?
+              reservá tu entrada
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-white/50">
-              Podés sacar hasta {remaining} ticket
-              {remaining !== 1 ? "s" : ""} con este correo.
+              Vas a recibir 1 ticket con este correo.
             </p>
           </div>
-
-          <label className="block">
-            <span className="mb-2 block text-xs uppercase tracking-widest text-white/60">
-              Cantidad
-            </span>
-            <select
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className={inputClass}
-            >
-              {Array.from({ length: remaining }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n} className="bg-black text-white">
-                  {n} {n === 1 ? "entrada" : "entradas"}
-                </option>
-              ))}
-            </select>
-          </label>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <button type="submit" disabled={loading} className={buttonClass}>
-            {loading ? "Reservando..." : "Reservar entradas"}
+            {loading ? "Reservando..." : "Reservar entrada"}
           </button>
         </form>
       )}
@@ -232,12 +248,10 @@ export default function TicketFlow() {
           </div>
           <div>
             <h2 className="font-display text-xl lowercase text-glow">
-              {remaining === 0 && tickets.length > 0 ? "listo" : "tus entradas"}
+              {tickets.length > 0 ? "listo" : "tus entradas"}
             </h2>
             <p className="mt-2 text-sm text-white/50">
-              {remaining > 0
-                ? `Te quedan ${remaining} ticket(s) con este correo.`
-                : "Te enviamos un resumen a tu correo."}
+              Te enviamos un resumen a tu correo.
             </p>
           </div>
 
@@ -278,19 +292,6 @@ export default function TicketFlow() {
                 <strong className="text-white">Nicolas Enrique Alonso</strong>
               </p>
             </div>
-          )}
-
-          {remaining > 0 && token && (
-            <button
-              type="button"
-              onClick={() => {
-                setStep("claim");
-                setError("");
-              }}
-              className="w-full rounded-lg border border-[#8ed8e8]/50 px-4 py-3 text-sm uppercase tracking-wider text-[#8ed8e8] transition hover:bg-[#8ed8e8]/10"
-            >
-              Sacar más ({remaining} restantes)
-            </button>
           )}
         </div>
       )}

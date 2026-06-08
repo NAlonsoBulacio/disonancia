@@ -1,8 +1,11 @@
 import Image from "next/image";
 import TicketFlow from "@/components/TicketFlow";
-import { EVENT, MAX_TICKETS_PER_EMAIL } from "@/lib/config";
+import { EVENT, MAX_TOTAL_TICKETS } from "@/lib/config";
+import { getTicketAvailability } from "@/lib/tickets";
 
-export default function Home() {
+export default async function Home() {
+  const { available } = await getTicketAvailability();
+
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="mx-auto flex min-h-screen max-w-6xl flex-col items-center gap-10 px-6 py-10 lg:flex-row lg:items-start lg:justify-center lg:gap-16 lg:px-10 lg:py-16">
@@ -53,12 +56,20 @@ export default function Home() {
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/60">
               {EVENT.date} · {EVENT.time} · {EVENT.venue}
-              <br />
-              Hasta {MAX_TICKETS_PER_EMAIL} tickets por correo
+              <br />1 ticket por correo
             </p>
+
+            <div className="mt-5 inline-block rounded-xl border border-[#8ed8e8]/40 bg-[#8ed8e8]/10 px-5 py-3">
+              <p className="font-mono text-lg font-semibold text-[#8ed8e8]">
+                {available} tickets disponibles de {MAX_TOTAL_TICKETS}
+              </p>
+            </div>
           </div>
 
-          <TicketFlow />
+          <TicketFlow
+            initialAvailable={available}
+            totalTickets={MAX_TOTAL_TICKETS}
+          />
         </section>
       </main>
     </div>
