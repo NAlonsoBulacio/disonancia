@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getTicketAvailability } from "@/lib/tickets";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const availability = await getTicketAvailability();

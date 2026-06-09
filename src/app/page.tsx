@@ -1,11 +1,10 @@
 import Image from "next/image";
-import TicketFlow from "@/components/TicketFlow";
-import { EVENT, MAX_TOTAL_TICKETS } from "@/lib/config";
-import { getTicketAvailability } from "@/lib/tickets";
+import TicketSection from "@/components/TicketSection";
+import { EVENT } from "@/lib/config";
 
-export default async function Home() {
-  const { available } = await getTicketAvailability();
+export const dynamic = "force-dynamic";
 
+export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="mx-auto flex min-h-screen max-w-6xl flex-col items-center gap-10 px-6 py-10 lg:flex-row lg:items-start lg:justify-center lg:gap-16 lg:px-10 lg:py-16">
@@ -47,7 +46,7 @@ export default async function Home() {
         </section>
 
         <section className="flex w-full max-w-md flex-col items-center lg:items-stretch lg:pt-8">
-          <div className="mb-8 text-center lg:text-left">
+          <div className="mb-2 text-center lg:text-left">
             <p className="text-xs uppercase tracking-[0.3em] text-[#8ed8e8]">
               Entrada gratuita
             </p>
@@ -58,18 +57,9 @@ export default async function Home() {
               {EVENT.date} · {EVENT.time} · {EVENT.venue}
               <br />1 ticket por correo
             </p>
-
-            <div className="mt-5 inline-block rounded-xl border border-[#8ed8e8]/40 bg-[#8ed8e8]/10 px-5 py-3">
-              <p className="font-mono text-lg font-semibold text-[#8ed8e8]">
-                {available} tickets disponibles de {MAX_TOTAL_TICKETS}
-              </p>
-            </div>
           </div>
 
-          <TicketFlow
-            initialAvailable={available}
-            totalTickets={MAX_TOTAL_TICKETS}
-          />
+          <TicketSection />
         </section>
       </main>
     </div>

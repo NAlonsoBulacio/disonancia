@@ -1,14 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CONFIRMATION_MESSAGE } from "@/lib/config";
 
 type Step = "email" | "code" | "claim" | "done";
 
 type TicketFlowProps = {
-  initialAvailable: number;
-  totalTickets: number;
+  available: number | null;
+  totalTickets: number | null;
+  onAvailabilityChange?: () => void;
 };
 
 function formatTicketNumber(n: number) {
@@ -16,29 +17,25 @@ function formatTicketNumber(n: number) {
 }
 
 export default function TicketFlow({
-  initialAvailable,
+  available,
   totalTickets,
+  onAvailabilityChange,
 }: TicketFlowProps) {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [token, setToken] = useState("");
-  const [available, setAvailable] = useState(initialAvailable);
   const [tickets, setTickets] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const soldOut = available === 0;
 
-  async function refreshAvailability() {
-    try {
-      const res = await fetch("/api/tickets/availability");
-      const data = await res.json();
-      if (res.ok) setAvailable(data.available);
-    } catch {
-      // ignore refresh errors
+  useEffect(() => {
+    if (available === 0 && step === "email") {
+      setError("");
     }
-  }
+  }, [available, step]);
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +53,7 @@ export default function TicketFlow({
       setStep("code");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
-      await refreshAvailability();
+      onAvailabilityChange?.();
     } finally {
       setLoading(false);
     }
@@ -78,7 +75,7 @@ export default function TicketFlow({
 
       setToken(data.token);
       setTickets(data.tickets ?? []);
-      if (typeof data.available === "number") setAvailable(data.available);
+      onAvailabilityChange?.();
 
       if (data.remaining === 0) {
         setStep("done");
@@ -109,11 +106,11 @@ export default function TicketFlow({
       if (!res.ok) throw new Error(data.error ?? "No se pudieron reservar");
 
       setTickets((prev) => [...prev, ...data.tickets].sort((a, b) => a - b));
-      if (typeof data.available === "number") setAvailable(data.available);
+      onAvailabilityChange?.();
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
-      await refreshAvailability();
+      onAvailabilityChange?.();
     } finally {
       setLoading(false);
     }
@@ -125,6 +122,14 @@ export default function TicketFlow({
   const buttonClass =
     "w-full rounded-lg bg-[#8ed8e8] px-4 py-3 font-medium uppercase tracking-wider text-black transition hover:bg-[#a8e4f0] disabled:opacity-50";
 
+  if (available === null) {
+    return (
+      <div className="w-full rounded-xl border border-white/15 bg-white/[0.03] p-8 text-center backdrop-blur-sm">
+        <p className="text-sm text-white/50">Cargando...</p>
+      </div>
+    );
+  }
+
   if (soldOut && step === "email") {
     return (
       <div className="w-full rounded-xl border border-white/15 bg-white/[0.03] p-8 text-center backdrop-blur-sm">
@@ -132,7 +137,7 @@ export default function TicketFlow({
           entradas agotadas
         </h2>
         <p className="mt-3 text-sm text-white/50">
-          Se reservaron las {totalTickets} entradas disponibles.
+          Se reservaron las {totalTickets ?? "—"} entradas disponibles.
         </p>
       </div>
     );
