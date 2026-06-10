@@ -34,8 +34,21 @@ model Ticket {
   id           String   @id @default(cuid())
   ticketNumber Int      @unique
   email        String
+  status       String   @default("active")
   createdAt    DateTime @default(now())
 
   @@index([email])
+  @@index([status])
   @@map("tickets_emitidos")
+}
+
+model ReturnToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("return_tokens")
 }

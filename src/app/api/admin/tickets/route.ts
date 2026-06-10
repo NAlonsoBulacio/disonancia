@@ -18,6 +18,7 @@ export async function GET() {
         id: t.id,
         ticketNumber: t.ticketNumber,
         email: t.email,
+        status: t.status,
         createdAt: t.createdAt.toISOString(),
       })),
       stats,

@@ -1,8 +1,10 @@
-import { MAX_TICKETS_PER_EMAIL, MAX_TOTAL_TICKETS } from "./config";
+import { MAX_TICKETS_PER_EMAIL, MAX_TOTAL_TICKETS, TICKET_STATUS } from "./config";
 import { prisma } from "./prisma";
 
+const activeFilter = { status: TICKET_STATUS.active };
+
 export async function getTicketCountForEmail(email: string) {
-  return prisma.ticket.count({ where: { email } });
+  return prisma.ticket.count({ where: { email, ...activeFilter } });
 }
 
 export async function getRemainingTicketsForEmail(email: string) {
@@ -12,7 +14,7 @@ export async function getRemainingTicketsForEmail(email: string) {
 
 export async function getTicketsForEmail(email: string) {
   return prisma.ticket.findMany({
-    where: { email },
+    where: { email, ...activeFilter },
     orderBy: { ticketNumber: "asc" },
   });
 }
@@ -24,12 +26,19 @@ export async function getAllTickets() {
 }
 
 export async function getTicketAvailability() {
-  const sold = await prisma.ticket.count();
-  const available = Math.max(0, MAX_TOTAL_TICKETS - sold);
+  const [issued, active, released] = await Promise.all([
+    prisma.ticket.count(),
+    prisma.ticket.count({ where: activeFilter }),
+    prisma.ticket.count({ where: { status: TICKET_STATUS.released } }),
+  ]);
+
+  const available = Math.max(0, MAX_TOTAL_TICKETS - issued);
 
   return {
     available,
-    sold,
+    sold: issued,
+    active,
+    released,
     total: MAX_TOTAL_TICKETS,
   };
 }
@@ -38,13 +47,16 @@ export async function getTicketStats() {
   const [availability, emails] = await Promise.all([
     getTicketAvailability(),
     prisma.ticket.findMany({
+      where: activeFilter,
       distinct: ["email"],
       select: { email: true },
     }),
   ]);
 
   return {
-    total: availability.sold,
+    total: availability.active,
+    issued: availability.sold,
+    released: availability.released,
     uniqueEmails: emails.length,
     available: availability.available,
     capacity: availability.total,
@@ -76,8 +88,8 @@ export async function claimTickets(email: string, quantity: number) {
 
   try {
     const created = await prisma.$transaction(async (tx) => {
-      const sold = await tx.ticket.count();
-      const availableGlobal = MAX_TOTAL_TICKETS - sold;
+      const issued = await tx.ticket.count();
+      const availableGlobal = MAX_TOTAL_TICKETS - issued;
 
       if (quantity > availableGlobal) {
         throw new Error(
@@ -87,7 +99,9 @@ export async function claimTickets(email: string, quantity: number) {
         );
       }
 
-      const usedByEmail = await tx.ticket.count({ where: { email } });
+      const usedByEmail = await tx.ticket.count({
+        where: { email, ...activeFilter },
+      });
       if (usedByEmail + quantity > MAX_TICKETS_PER_EMAIL) {
         throw new Error("EMAIL_LIMIT");
       }
@@ -96,6 +110,7 @@ export async function claimTickets(email: string, quantity: number) {
       const tickets = Array.from({ length: quantity }, (_, i) => ({
         ticketNumber: startNumber + i,
         email,
+        status: TICKET_STATUS.active,
       }));
 
       return Promise.all(

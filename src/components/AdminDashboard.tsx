@@ -1,17 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminReturnPanel from "@/components/AdminReturnPanel";
 import { EVENT } from "@/lib/config";
 
 type Ticket = {
   id: string;
   ticketNumber: number;
   email: string;
+  status: string;
   createdAt: string;
 };
 
 type Stats = {
   total: number;
+  issued: number;
+  released: number;
   uniqueEmails: number;
   available: number;
   capacity: number;
@@ -179,13 +183,21 @@ export default function AdminDashboard() {
         </header>
 
         {stats && (
-          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div className="rounded-xl border border-[#8ed8e8]/30 bg-[#8ed8e8]/5 p-5">
               <p className="text-xs uppercase tracking-widest text-white/50">
-                Emitidas
+                Activas
               </p>
               <p className="mt-2 font-mono text-3xl font-bold text-[#8ed8e8]">
                 {stats.total}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-white/[0.03] p-5">
+              <p className="text-xs uppercase tracking-widest text-white/50">
+                Liberadas
+              </p>
+              <p className="mt-2 font-mono text-3xl font-bold text-white/70">
+                {stats.released}
               </p>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/[0.03] p-5">
@@ -210,6 +222,8 @@ export default function AdminDashboard() {
 
         {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
+        <AdminReturnPanel />
+
         <div className="overflow-hidden rounded-xl border border-white/15">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[600px] text-left text-sm">
@@ -217,19 +231,20 @@ export default function AdminDashboard() {
                 <tr className="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-widest text-white/50">
                   <th className="px-5 py-4">Ticket</th>
                   <th className="px-5 py-4">Correo</th>
+                  <th className="px-5 py-4">Estado</th>
                   <th className="px-5 py-4">Fecha</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && tickets.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-5 py-10 text-center text-white/40">
+                    <td colSpan={4} className="px-5 py-10 text-center text-white/40">
                       Cargando entradas...
                     </td>
                   </tr>
                 ) : tickets.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-5 py-10 text-center text-white/40">
+                    <td colSpan={4} className="px-5 py-10 text-center text-white/40">
                       Todavía no hay entradas emitidas.
                     </td>
                   </tr>
@@ -243,6 +258,13 @@ export default function AdminDashboard() {
                         {formatTicketNumber(ticket.ticketNumber)}
                       </td>
                       <td className="px-5 py-4 text-white/80">{ticket.email}</td>
+                      <td className="px-5 py-4 text-white/50">
+                        {ticket.status === "released" ? (
+                          <span className="text-white/40">liberada</span>
+                        ) : (
+                          <span className="text-[#8ed8e8]">activa</span>
+                        )}
+                      </td>
                       <td className="px-5 py-4 text-white/50">
                         {formatDate(ticket.createdAt)}
                       </td>

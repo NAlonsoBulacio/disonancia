@@ -24,6 +24,17 @@ export const CONTRIBUTION_MESSAGE =
 
 export const MAX_TOTAL_TICKETS = 176;
 export const MAX_TICKETS_PER_EMAIL = 1;
+export const MAX_TICKETS_LEGACY_PER_EMAIL = 3;
+export const RETURN_LINK_EXPIRY_DAYS = 14;
+
+export const TICKET_STATUS = {
+  active: "active",
+  released: "released",
+} as const;
+
+export const SOLD_OUT_TITLE = "SOLD OUT";
+export const SOLD_OUT_MESSAGE =
+  "Hablá con tu banda favorita para lista de espera.";
 
 export const CODE_EXPIRY_MINUTES = 15;
 export const SESSION_EXPIRY_HOURS = 2;
