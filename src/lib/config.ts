@@ -34,7 +34,7 @@ export const TICKET_STATUS = {
 
 export const SOLD_OUT_TITLE = "SOLD OUT";
 export const SOLD_OUT_MESSAGE =
-  "Hablá con tu banda favorita para lista de espera.";
+  "Comunicate con tu banda fav para la lista de espera.";
 
 export const CODE_EXPIRY_MINUTES = 15;
 export const SESSION_EXPIRY_HOURS = 2;
