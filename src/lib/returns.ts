@@ -152,6 +152,7 @@ export async function releaseTickets(token: string, quantity: number) {
     ok: true as const,
     released: toRelease.map((t) => t.ticketNumber).sort((a, b) => a - b),
     remaining: remaining.map((t) => t.ticketNumber),
-    ...availability,
+    available: availability.available,
+    total: availability.total,
   };
 }
