@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { isValidEmail, normalizeEmail } from "@/lib/auth";
+import { sendReturnInvitation } from "@/lib/mail";
 import { createReturnLink } from "@/lib/returns";
 
 export async function POST(request: Request) {
@@ -11,6 +12,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const email = normalizeEmail(String(body.email ?? ""));
+    const send = body.send === true;
 
     if (!isValidEmail(email)) {
       return NextResponse.json(
@@ -25,7 +27,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    return NextResponse.json(result);
+    if (send) {
+      await sendReturnInvitation(
+        result.email,
+        result.subject,
+        result.body,
+        result.url,
+        result.tickets,
+        result.quantityHint,
+      );
+    }
+
+    return NextResponse.json({ ...result, sent: send });
   } catch (error) {
     console.error("admin return-link error:", error);
     return NextResponse.json(

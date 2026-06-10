@@ -16,7 +16,7 @@ export default async function DevolverPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black px-6 py-12 text-white">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         {!token ? (
           <div className="rounded-xl border border-white/15 bg-white/[0.03] p-8 text-center">
             <h1 className="font-display text-xl lowercase text-glow">

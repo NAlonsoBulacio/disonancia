@@ -196,3 +196,66 @@ export async function sendTicketsConfirmation(
     attachments: [getMaikelChangoAttachment()],
   });
 }
+
+function buildReturnInvitationHtml(
+  url: string,
+  ticketNumbers: number[],
+  quantityHint: string,
+) {
+  const ticketsLabel = ticketNumbers
+    .map((n) => `#${String(n).padStart(4, "0")}`)
+    .join(" · ");
+
+  return emailWrapper(`
+    <p style="color: rgba(255,255,255,0.85); line-height: 1.7;">Hola,</p>
+    <p style="color: rgba(255,255,255,0.85); line-height: 1.7;">
+      Queremos confirmar si vas a poder asistir a <strong style="color: #8ed8e8;">${EVENT.name}</strong>.
+    </p>
+    <p style="margin: 16px 0; padding: 16px; border: 1px solid rgba(142,216,232,0.25); border-radius: 8px; color: rgba(255,255,255,0.8); line-height: 1.7; text-align: center;">
+      ${EVENT.date} · ${EVENT.time}<br/>
+      ${EVENT.venue}, ${EVENT.address}
+    </p>
+    <p style="color: rgba(255,255,255,0.85); line-height: 1.7;">
+      Si vas a venir, nos vemos ahí. No tenés que hacer nada.
+    </p>
+    <p style="color: rgba(255,255,255,0.85); line-height: 1.7;">
+      Si no vas a poder asistir, podés devolver tus entradas desde este botón:
+    </p>
+    <p style="margin: 28px 0; text-align: center;">
+      <a href="${url}" style="display: inline-block; background: #8ed8e8; color: #000; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">Devolver mis entradas</a>
+    </p>
+    <p style="margin: 0 0 8px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.45);">Tus entradas activas</p>
+    <p style="margin: 0 0 16px; font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #8ed8e8; text-align: center;">${ticketsLabel}</p>
+    <p style="color: rgba(255,255,255,0.65); font-size: 14px; line-height: 1.7; text-align: center;">${quantityHint}</p>
+    <p style="margin-top: 20px; font-size: 13px; color: rgba(255,255,255,0.45); text-align: center;">
+      Si el botón no funciona, copiá este enlace:<br/>
+      <a href="${url}" style="color: #8ed8e8; word-break: break-all;">${url}</a>
+    </p>
+    <p style="margin-top: 24px; color: rgba(255,255,255,0.7); line-height: 1.7;">Gracias por avisar,<br/>Ciclo disonancia</p>
+  `);
+}
+
+export async function sendReturnInvitation(
+  email: string,
+  subject: string,
+  text: string,
+  url: string,
+  ticketNumbers: number[],
+  quantityHint: string,
+) {
+  const transporter = getTransporter();
+  const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
+  const html = buildReturnInvitationHtml(url, ticketNumbers, quantityHint);
+
+  if (!transporter || !from) {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[DEV] Invitación de asistencia para ${email}:`);
+      console.log(text);
+      console.log(`[DEV] Botón: ${url}`);
+      return;
+    }
+    throw new Error("SMTP no configurado");
+  }
+
+  await transporter.sendMail({ from, to: email, subject, text, html });
+}

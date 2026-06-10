@@ -9,6 +9,7 @@ type ReturnLinkResult = {
   body: string;
   tickets: number[];
   expiresAt: string;
+  sent?: boolean;
 };
 
 function formatTicketNumber(n: number) {
@@ -18,29 +19,39 @@ function formatTicketNumber(n: number) {
 export default function AdminReturnPanel() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<"send" | "generate" | null>(
+    null,
+  );
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [result, setResult] = useState<ReturnLinkResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  async function handleGenerate(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent, send: boolean) {
     e.preventDefault();
     setLoading(true);
+    setLoadingAction(send ? "send" : "generate");
     setError("");
+    setSuccess("");
     setResult(null);
 
     try {
       const res = await fetch("/api/admin/return-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, send }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al generar enlace");
       setResult(data);
+      if (data.sent) {
+        setSuccess(`Correo enviado a ${data.email}.`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -56,17 +67,21 @@ export default function AdminReturnPanel() {
   return (
     <section className="mb-10 rounded-xl border border-white/15 bg-white/[0.03] p-6">
       <p className="text-xs uppercase tracking-[0.3em] text-[#8ed8e8]">
-        Envío manual
+        Confirmar asistencia
       </p>
       <h2 className="mt-2 font-display text-2xl lowercase text-white">
-        liberar entradas
+        invitar a liberar entradas
       </h2>
       <p className="mt-2 text-sm text-white/50">
-        Generá un enlace personalizado por correo. Copiá el mail y enviálo
-        manualmente a cada persona.
+        Ingresá el correo de cada persona. El mail pregunta si va a venir y, si
+        no puede, le permite devolver 1, 2 o 3 entradas con un enlace
+        personalizado.
       </p>
 
-      <form onSubmit={handleGenerate} className="mt-6 flex flex-col gap-4 sm:flex-row">
+      <form
+        onSubmit={(e) => handleSubmit(e, true)}
+        className="mt-6 flex flex-col gap-4 sm:flex-row"
+      >
         <input
           type="email"
           required
@@ -80,10 +95,19 @@ export default function AdminReturnPanel() {
           disabled={loading}
           className="shrink-0 rounded-lg bg-[#8ed8e8] px-6 py-3 text-sm font-medium uppercase tracking-wider text-black transition hover:bg-[#a8e4f0] disabled:opacity-50"
         >
-          {loading ? "Generando..." : "Generar enlace"}
+          {loadingAction === "send" ? "Enviando..." : "Enviar correo"}
+        </button>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={(e) => handleSubmit(e, false)}
+          className="shrink-0 rounded-lg border border-white/20 px-6 py-3 text-sm font-medium uppercase tracking-wider text-white/70 transition hover:border-[#8ed8e8]/50 hover:text-[#8ed8e8] disabled:opacity-50"
+        >
+          {loadingAction === "generate" ? "Generando..." : "Solo enlace"}
         </button>
       </form>
 
+      {success && <p className="mt-4 text-sm text-[#8ed8e8]">{success}</p>}
       {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 
       {result && (
@@ -149,7 +173,7 @@ export default function AdminReturnPanel() {
             <textarea
               readOnly
               value={result.body}
-              rows={10}
+              rows={14}
               className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm leading-relaxed text-white/80 outline-none"
             />
           </div>

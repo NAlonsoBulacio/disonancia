@@ -19,25 +19,47 @@ export function buildReturnUrl(token: string) {
   return `${getAppBaseUrl()}/devolver?token=${token}`;
 }
 
-export function buildManualReturnEmail(email: string, url: string) {
-  const subject = `Liberá tus entradas — ${EVENT.name}`;
+function formatTicketNumber(n: number) {
+  return `#${String(n).padStart(4, "0")}`;
+}
+
+function getReturnQuantityHint(count: number) {
+  if (count <= 1) return "Podés devolver tu entrada.";
+  if (count === 2) return "Podés devolver 1 o 2 entradas.";
+  return "Podés devolver 1, 2 o las 3 entradas.";
+}
+
+export function buildManualReturnEmail(
+  url: string,
+  ticketNumbers: number[],
+) {
+  const ticketsLabel = ticketNumbers.map(formatTicketNumber).join(" · ");
+  const quantityHint = getReturnQuantityHint(ticketNumbers.length);
+
+  const subject = `¿Vas a venir? — ${EVENT.name}`;
   const body = [
     `Hola,`,
     ``,
-    `Si finalmente no vas a poder asistir a ${EVENT.name}, podés liberar tus entradas.`,
+    `Queremos confirmar si vas a poder asistir a ${EVENT.name}.`,
     ``,
-    `Ingresá acá:`,
+    `${EVENT.date} · ${EVENT.time}`,
+    `${EVENT.venue}, ${EVENT.address}`,
+    ``,
+    `Si vas a venir, nos vemos ahí. No tenés que hacer nada.`,
+    ``,
+    `Si no vas a poder asistir, tocá el botón del correo o usá este enlace para ver tus entradas y devolverlas:`,
     url,
     ``,
-    `Podés devolver 1, 2 o todas las entradas asociadas a ${email}.`,
+    `Tus entradas activas: ${ticketsLabel}`,
+    quantityHint,
     ``,
     `El enlace vence en ${RETURN_LINK_EXPIRY_DAYS} días.`,
     ``,
-    `Gracias,`,
+    `Gracias por avisar,`,
     `Ciclo disonancia`,
   ].join("\n");
 
-  return { subject, body };
+  return { subject, body, quantityHint };
 }
 
 export async function createReturnLink(email: string) {
@@ -62,7 +84,8 @@ export async function createReturnLink(email: string) {
   });
 
   const url = buildReturnUrl(token);
-  const emailContent = buildManualReturnEmail(normalized, url);
+  const ticketNumbers = tickets.map((t) => t.ticketNumber);
+  const emailContent = buildManualReturnEmail(url, ticketNumbers);
 
   return {
     ok: true as const,

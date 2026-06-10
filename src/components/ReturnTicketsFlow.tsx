@@ -87,7 +87,7 @@ export default function ReturnTicketsFlow({ token }: { token: string }) {
   if (loading) {
     return (
       <div className="rounded-xl border border-white/15 bg-white/[0.03] p-8 text-center">
-        <p className="text-white/50">Cargando...</p>
+        <p className="text-white/50">Cargando tus entradas...</p>
       </div>
     );
   }
@@ -150,33 +150,48 @@ export default function ReturnTicketsFlow({ token }: { token: string }) {
         {EVENT.name}
       </p>
       <h2 className="mt-2 font-display text-2xl lowercase text-glow">
-        liberar entradas
+        tus entradas
       </h2>
-      <p className="mt-3 text-sm text-white/50">
-        Correo: <strong className="text-white">{info.email}</strong>
+      <p className="mt-3 text-sm leading-relaxed text-white/50">
+        Acá están las entradas asociadas a{" "}
+        <strong className="text-white">{info.email}</strong>. Si no vas a poder
+        asistir, elegí cuántas querés devolver.
       </p>
 
-      <ul className="mt-5 space-y-2">
-        {info.tickets.map((n) => (
-          <li
-            key={n}
-            className="rounded-lg border border-[#8ed8e8]/30 bg-[#8ed8e8]/5 px-4 py-3 font-mono text-lg font-semibold text-[#8ed8e8]"
-          >
-            Ticket {formatTicketNumber(n)}
-          </li>
-        ))}
-      </ul>
+      <div className="mt-5 rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-center text-sm text-white/60">
+        <p>{EVENT.date} · {EVENT.time}</p>
+        <p className="mt-1">{EVENT.venue}, {EVENT.address}</p>
+      </div>
 
-      <form onSubmit={handleRelease} className="mt-6 space-y-5">
+      <div className="mt-6">
+        <p className="text-xs uppercase tracking-widest text-white/50">
+          Entradas activas ({info.tickets.length})
+        </p>
+        <ul className="mt-3 space-y-2">
+          {info.tickets.map((n) => (
+            <li
+              key={n}
+              className="rounded-lg border border-[#8ed8e8]/30 bg-[#8ed8e8]/5 px-4 py-3 font-mono text-lg font-semibold text-[#8ed8e8]"
+            >
+              Entrada {formatTicketNumber(n)}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <form onSubmit={handleRelease} className="mt-8 space-y-5 border-t border-white/10 pt-6">
         <div>
-          <p className="text-sm text-white/60">
-            ¿Cuántas entradas querés liberar?
+          <p className="text-sm text-white/70">
+            ¿Cuántas entradas querés devolver?
+          </p>
+          <p className="mt-1 text-xs text-white/40">
+            Podés devolver una, varias o todas las que tengas.
           </p>
         </div>
 
         <label className="block">
           <span className="mb-2 block text-xs uppercase tracking-widest text-white/60">
-            Cantidad
+            Cantidad a devolver
           </span>
           <select
             value={quantity}
@@ -196,7 +211,7 @@ export default function ReturnTicketsFlow({ token }: { token: string }) {
         {error && <p className="text-sm text-red-400">{error}</p>}
 
         <button type="submit" disabled={submitting} className={buttonClass}>
-          {submitting ? "Liberando..." : "Liberar entradas"}
+          {submitting ? "Devolviendo..." : "Devolver entradas"}
         </button>
       </form>
     </div>
