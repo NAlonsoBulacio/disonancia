@@ -22,6 +22,8 @@ type Stats = {
   capacity: number;
 };
 
+type AdminSection = "tickets" | "emails";
+
 function formatTicketNumber(n: number) {
   return `#${String(n).padStart(4, "0")}`;
 }
@@ -41,6 +43,7 @@ const ticketStatusLabels = {
 export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
+  const [activeSection, setActiveSection] = useState<AdminSection>("tickets");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -254,70 +257,98 @@ export default function AdminDashboard() {
 
         {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
-        <AdminConfirmationPanel />
+        <div className="mb-8 flex flex-wrap gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2">
+          <button
+            type="button"
+            onClick={() => setActiveSection("tickets")}
+            className={`rounded-lg px-4 py-2 text-sm uppercase tracking-wider transition ${
+              activeSection === "tickets"
+                ? "bg-[#8ed8e8] text-black"
+                : "text-white/60 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            Entradas
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection("emails")}
+            className={`rounded-lg px-4 py-2 text-sm uppercase tracking-wider transition ${
+              activeSection === "emails"
+                ? "bg-[#8ed8e8] text-black"
+                : "text-white/60 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            Correos
+          </button>
+        </div>
 
-        <AdminReturnPanel />
-
-        <div className="overflow-hidden rounded-xl border border-white/15">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-widest text-white/50">
-                  <th className="px-5 py-4">Ticket</th>
-                  <th className="px-5 py-4">Correo</th>
-                  <th className="px-5 py-4">Estado</th>
-                  <th className="px-5 py-4">Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && tickets.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-10 text-center text-white/40">
-                      Cargando entradas...
-                    </td>
+        {activeSection === "emails" ? (
+          <>
+            <AdminConfirmationPanel />
+            <AdminReturnPanel />
+          </>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-white/15">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-widest text-white/50">
+                    <th className="px-5 py-4">Ticket</th>
+                    <th className="px-5 py-4">Correo</th>
+                    <th className="px-5 py-4">Estado</th>
+                    <th className="px-5 py-4">Fecha</th>
                   </tr>
-                ) : tickets.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-10 text-center text-white/40">
-                      Todavía no hay entradas emitidas.
-                    </td>
-                  </tr>
-                ) : (
-                  tickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      className="border-b border-white/5 transition hover:bg-white/[0.02]"
-                    >
-                      <td className="px-5 py-4 font-mono text-base font-semibold text-[#8ed8e8]">
-                        {formatTicketNumber(ticket.ticketNumber)}
-                      </td>
-                      <td className="px-5 py-4 text-white/80">{ticket.email}</td>
-                      <td className="px-5 py-4 text-white/50">
-                        <select
-                          value={ticket.status}
-                          disabled={updatingTicketId === ticket.id}
-                          onChange={(e) =>
-                            handleTicketStatusChange(ticket, e.target.value)
-                          }
-                          className="rounded-lg border border-white/15 bg-black px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ed8e8] disabled:opacity-50"
-                        >
-                          {Object.values(TICKET_STATUS).map((status) => (
-                            <option key={status} value={status}>
-                              {ticketStatusLabels[status]}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-5 py-4 text-white/50">
-                        {formatDate(ticket.createdAt)}
+                </thead>
+                <tbody>
+                  {loading && tickets.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-10 text-center text-white/40">
+                        Cargando entradas...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : tickets.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-10 text-center text-white/40">
+                        Todavía no hay entradas emitidas.
+                      </td>
+                    </tr>
+                  ) : (
+                    tickets.map((ticket) => (
+                      <tr
+                        key={ticket.id}
+                        className="border-b border-white/5 transition hover:bg-white/[0.02]"
+                      >
+                        <td className="px-5 py-4 font-mono text-base font-semibold text-[#8ed8e8]">
+                          {formatTicketNumber(ticket.ticketNumber)}
+                        </td>
+                        <td className="px-5 py-4 text-white/80">{ticket.email}</td>
+                        <td className="px-5 py-4 text-white/50">
+                          <select
+                            value={ticket.status}
+                            disabled={updatingTicketId === ticket.id}
+                            onChange={(e) =>
+                              handleTicketStatusChange(ticket, e.target.value)
+                            }
+                            className="rounded-lg border border-white/15 bg-black px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ed8e8] disabled:opacity-50"
+                          >
+                            {Object.values(TICKET_STATUS).map((status) => (
+                              <option key={status} value={status}>
+                                {ticketStatusLabels[status]}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-5 py-4 text-white/50">
+                          {formatDate(ticket.createdAt)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
