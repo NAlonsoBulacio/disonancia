@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminConfirmationPanel from "@/components/AdminConfirmationPanel";
 import AdminReturnPanel from "@/components/AdminReturnPanel";
-import { EVENT } from "@/lib/config";
+import { EVENT, TICKET_STATUS } from "@/lib/config";
 
 type Ticket = {
   id: string;
@@ -32,12 +33,18 @@ function formatDate(iso: string) {
   }).format(new Date(iso));
 }
 
+const ticketStatusLabels = {
+  [TICKET_STATUS.active]: "activa",
+  [TICKET_STATUS.released]: "liberada",
+};
+
 export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
+  const [updatingTicketId, setUpdatingTicketId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const loadTickets = useCallback(async () => {
@@ -93,6 +100,31 @@ export default function AdminDashboard() {
     setAuthenticated(false);
     setTickets([]);
     setStats(null);
+  }
+
+  async function handleTicketStatusChange(ticket: Ticket, status: string) {
+    if (ticket.status === status) return;
+
+    setUpdatingTicketId(ticket.id);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/tickets", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ticket.id, status }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al actualizar");
+
+      setTickets((current) =>
+        current.map((item) => (item.id === data.ticket.id ? data.ticket : item)),
+      );
+      setStats(data.stats);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error inesperado");
+    } finally {
+      setUpdatingTicketId(null);
+    }
   }
 
   const inputClass =
@@ -222,6 +254,8 @@ export default function AdminDashboard() {
 
         {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
+        <AdminConfirmationPanel />
+
         <AdminReturnPanel />
 
         <div className="overflow-hidden rounded-xl border border-white/15">
@@ -259,11 +293,20 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-5 py-4 text-white/80">{ticket.email}</td>
                       <td className="px-5 py-4 text-white/50">
-                        {ticket.status === "released" ? (
-                          <span className="text-white/40">liberada</span>
-                        ) : (
-                          <span className="text-[#8ed8e8]">activa</span>
-                        )}
+                        <select
+                          value={ticket.status}
+                          disabled={updatingTicketId === ticket.id}
+                          onChange={(e) =>
+                            handleTicketStatusChange(ticket, e.target.value)
+                          }
+                          className="rounded-lg border border-white/15 bg-black px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ed8e8] disabled:opacity-50"
+                        >
+                          {Object.values(TICKET_STATUS).map((status) => (
+                            <option key={status} value={status}>
+                              {ticketStatusLabels[status]}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-5 py-4 text-white/50">
                         {formatDate(ticket.createdAt)}

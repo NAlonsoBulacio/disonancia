@@ -25,6 +25,27 @@ export async function getAllTickets() {
   });
 }
 
+export async function getActiveTicketRecipients() {
+  const tickets = await prisma.ticket.findMany({
+    where: activeFilter,
+    orderBy: [{ email: "asc" }, { ticketNumber: "asc" }],
+    select: { email: true, ticketNumber: true },
+  });
+
+  const recipients = new Map<string, number[]>();
+  for (const ticket of tickets) {
+    recipients.set(ticket.email, [
+      ...(recipients.get(ticket.email) ?? []),
+      ticket.ticketNumber,
+    ]);
+  }
+
+  return Array.from(recipients, ([email, ticketNumbers]) => ({
+    email,
+    ticketNumbers,
+  }));
+}
+
 export async function getTicketAvailability() {
   const [issued, active, released] = await Promise.all([
     prisma.ticket.count(),
