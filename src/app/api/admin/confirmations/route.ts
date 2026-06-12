@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { sendTicketsConfirmation } from "@/lib/mail";
+import { sendAttendanceConfirmation } from "@/lib/mail";
 import { getActiveTicketRecipients } from "@/lib/tickets";
 
 export async function GET() {
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     await Promise.all(
       selectedRecipients.map((recipient) =>
-        sendTicketsConfirmation(recipient.email, recipient.ticketNumbers),
+        sendAttendanceConfirmation(recipient.email, recipient.ticketNumbers),
       ),
     );
 
