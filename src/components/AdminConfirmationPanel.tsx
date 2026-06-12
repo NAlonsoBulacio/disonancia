@@ -52,8 +52,8 @@ export default function AdminConfirmationPanel() {
 
       setSuccess(
         email
-          ? `Correo de confirmación enviado a ${email}.`
-          : `Correos enviados: ${data.sent.length}.`,
+          ? `Correo de presencialidad enviado a ${email}.`
+          : `Correos de presencialidad enviados: ${data.sent.length}.`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
@@ -73,8 +73,8 @@ export default function AdminConfirmationPanel() {
             correos con entradas activas
           </h2>
           <p className="mt-2 text-sm text-white/50">
-            Enviá manualmente el correo de confirmación de presencialidad a los
-            correos con entradas activas.
+            Enviá el correo para confirmar si vienen y permitir que devuelvan
+            sus entradas desde un enlace personalizado.
           </p>
         </div>
 

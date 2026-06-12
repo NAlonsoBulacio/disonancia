@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { sendAttendanceConfirmation } from "@/lib/mail";
+import { sendReturnInvitation } from "@/lib/mail";
+import { createReturnLink } from "@/lib/returns";
 import { getActiveTicketRecipients } from "@/lib/tickets";
 
 export async function GET() {
@@ -41,14 +42,26 @@ export async function POST(request: Request) {
       );
     }
 
-    await Promise.all(
-      selectedRecipients.map((recipient) =>
-        sendAttendanceConfirmation(recipient.email, recipient.ticketNumbers),
-      ),
-    );
+    const sent = [];
+    for (const recipient of selectedRecipients) {
+      const result = await createReturnLink(recipient.email);
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+
+      await sendReturnInvitation(
+        result.email,
+        result.subject,
+        result.body,
+        result.url,
+        result.tickets,
+        result.quantityHint,
+      );
+      sent.push(result.email);
+    }
 
     return NextResponse.json({
-      sent: selectedRecipients.map((recipient) => recipient.email),
+      sent,
     });
   } catch (error) {
     console.error("admin confirmations send error:", error);

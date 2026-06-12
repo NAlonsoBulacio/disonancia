@@ -201,60 +201,6 @@ export async function sendTicketsConfirmation(
   });
 }
 
-export async function sendAttendanceConfirmation(
-  email: string,
-  ticketNumbers: number[],
-) {
-  const transporter = getTransporter();
-  const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
-  const ticketsLabel = ticketNumbers
-    .map((n) => `#${String(n).padStart(4, "0")}`)
-    .join(" · ");
-
-  const subject = `Confirmación de presencialidad — ${EVENT.name}`;
-  const text = [
-    `Hola,`,
-    ``,
-    `Te escribimos para confirmar tu presencialidad en ${EVENT.name}.`,
-    ``,
-    `${EVENT.date} · ${EVENT.time}`,
-    `${EVENT.venue}, ${EVENT.address}`,
-    ``,
-    `Tus entradas activas: ${ticketsLabel}`,
-    ``,
-    `Presentá este correo en la entrada.`,
-    ``,
-    `Gracias,`,
-    `Ciclo disonancia`,
-  ].join("\n");
-
-  const html = emailWrapper(`
-    <p style="color: rgba(255,255,255,0.85); line-height: 1.7;">Hola,</p>
-    <p style="color: rgba(255,255,255,0.85); line-height: 1.7;">
-      Te escribimos para confirmar tu presencialidad en <strong style="color: #8ed8e8;">${EVENT.name}</strong>.
-    </p>
-    <p style="margin: 16px 0; padding: 16px; border: 1px solid rgba(142,216,232,0.25); border-radius: 8px; color: rgba(255,255,255,0.8); line-height: 1.7; text-align: center;">
-      ${EVENT.date} · ${EVENT.time}<br/>
-      ${EVENT.venue}, ${EVENT.address}
-    </p>
-    <p style="margin: 0 0 8px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.45);">Tus entradas activas</p>
-    <p style="margin: 0 0 20px; font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #8ed8e8; text-align: center;">${ticketsLabel}</p>
-    <p style="color: rgba(255,255,255,0.7); line-height: 1.7;">Presentá este correo en la entrada.</p>
-    <p style="margin-top: 24px; color: rgba(255,255,255,0.7); line-height: 1.7;">Gracias,<br/>Ciclo disonancia</p>
-  `);
-
-  if (!transporter || !from) {
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[DEV] Confirmación de presencialidad para ${email}:`);
-      console.log(text);
-      return;
-    }
-    throw new Error("SMTP no configurado");
-  }
-
-  await transporter.sendMail({ from, to: email, subject, text, html });
-}
-
 function buildReturnInvitationHtml(
   url: string,
   ticketNumbers: number[],
