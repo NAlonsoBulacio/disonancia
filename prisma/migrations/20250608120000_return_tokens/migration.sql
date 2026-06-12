@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "return_tokens" (
+CREATE TABLE IF NOT EXISTS "return_tokens" (
     "id" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE "return_tokens" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "return_tokens_token_key" ON "return_tokens"("token");
+CREATE UNIQUE INDEX IF NOT EXISTS "return_tokens_token_key" ON "return_tokens"("token");
 
 -- CreateIndex
-CREATE INDEX "return_tokens_email_idx" ON "return_tokens"("email");
+CREATE INDEX IF NOT EXISTS "return_tokens_email_idx" ON "return_tokens"("email");

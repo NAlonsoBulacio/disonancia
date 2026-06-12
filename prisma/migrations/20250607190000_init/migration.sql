@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "verification_codes" (
+CREATE TABLE IF NOT EXISTS "verification_codes" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "code" TEXT NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE "verification_codes" (
 );
 
 -- CreateTable
-CREATE TABLE "sessions" (
+CREATE TABLE IF NOT EXISTS "sessions" (
     "id" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE "sessions" (
 );
 
 -- CreateTable
-CREATE TABLE "tickets_emitidos" (
+CREATE TABLE IF NOT EXISTS "tickets_emitidos" (
     "id" TEXT NOT NULL,
     "ticketNumber" INTEGER NOT NULL,
     "email" TEXT NOT NULL,
@@ -31,16 +31,16 @@ CREATE TABLE "tickets_emitidos" (
 );
 
 -- CreateIndex
-CREATE INDEX "verification_codes_email_idx" ON "verification_codes"("email");
+CREATE INDEX IF NOT EXISTS "verification_codes_email_idx" ON "verification_codes"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "sessions_token_key" ON "sessions"("token");
+CREATE UNIQUE INDEX IF NOT EXISTS "sessions_token_key" ON "sessions"("token");
 
 -- CreateIndex
-CREATE INDEX "sessions_email_idx" ON "sessions"("email");
+CREATE INDEX IF NOT EXISTS "sessions_email_idx" ON "sessions"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tickets_emitidos_ticketNumber_key" ON "tickets_emitidos"("ticketNumber");
+CREATE UNIQUE INDEX IF NOT EXISTS "tickets_emitidos_ticketNumber_key" ON "tickets_emitidos"("ticketNumber");
 
 -- CreateIndex
-CREATE INDEX "tickets_emitidos_email_idx" ON "tickets_emitidos"("email");
+CREATE INDEX IF NOT EXISTS "tickets_emitidos_email_idx" ON "tickets_emitidos"("email");
