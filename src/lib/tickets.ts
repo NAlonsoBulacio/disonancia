@@ -47,17 +47,16 @@ export async function getActiveTicketRecipients() {
 }
 
 export async function getTicketAvailability() {
-  const [issued, active, released] = await Promise.all([
-    prisma.ticket.count(),
+  const [active, released] = await Promise.all([
     prisma.ticket.count({ where: activeFilter }),
     prisma.ticket.count({ where: { status: TICKET_STATUS.released } }),
   ]);
 
-  const available = Math.max(0, MAX_TOTAL_TICKETS - issued);
+  const available = Math.max(0, MAX_TOTAL_TICKETS - active);
 
   return {
     available,
-    sold: issued,
+    sold: active,
     active,
     released,
     total: MAX_TOTAL_TICKETS,
@@ -109,8 +108,8 @@ export async function claimTickets(email: string, quantity: number) {
 
   try {
     const created = await prisma.$transaction(async (tx) => {
-      const issued = await tx.ticket.count();
-      const availableGlobal = MAX_TOTAL_TICKETS - issued;
+      const active = await tx.ticket.count({ where: activeFilter });
+      const availableGlobal = MAX_TOTAL_TICKETS - active;
 
       if (quantity > availableGlobal) {
         throw new Error(
@@ -127,16 +126,36 @@ export async function claimTickets(email: string, quantity: number) {
         throw new Error("EMAIL_LIMIT");
       }
 
+      const releasedTickets = await tx.ticket.findMany({
+        where: { status: TICKET_STATUS.released },
+        orderBy: { ticketNumber: "asc" },
+        take: quantity,
+      });
+
+      const reactivatedTickets = await Promise.all(
+        releasedTickets.map((ticket) =>
+          tx.ticket.update({
+            where: { id: ticket.id },
+            data: { email, status: TICKET_STATUS.active },
+          }),
+        ),
+      );
+
+      const newTicketQuantity = quantity - releasedTickets.length;
+      if (newTicketQuantity === 0) return reactivatedTickets;
+
       const startNumber = await getNextTicketNumber(tx);
-      const tickets = Array.from({ length: quantity }, (_, i) => ({
+      const newTickets = Array.from({ length: newTicketQuantity }, (_, i) => ({
         ticketNumber: startNumber + i,
         email,
         status: TICKET_STATUS.active,
       }));
 
-      return Promise.all(
-        tickets.map((ticket) => tx.ticket.create({ data: ticket })),
+      const createdTickets = await Promise.all(
+        newTickets.map((ticket) => tx.ticket.create({ data: ticket })),
       );
+
+      return [...reactivatedTickets, ...createdTickets];
     });
 
     const availability = await getTicketAvailability();
