@@ -4,7 +4,7 @@ import { TICKET_STATUS } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import { getAllTickets, getTicketStats } from "@/lib/tickets";
 
-const allowedStatuses = new Set(Object.values(TICKET_STATUS));
+const allowedStatuses = new Set<string>(Object.values(TICKET_STATUS));
 
 export async function GET() {
   if (!(await isAdminAuthenticated())) {
