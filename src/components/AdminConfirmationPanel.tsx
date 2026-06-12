@@ -73,8 +73,8 @@ export default function AdminConfirmationPanel() {
             correos con entradas activas
           </h2>
           <p className="mt-2 text-sm text-white/50">
-            Enviá manualmente el correo de confirmación. El mail aclara que la
-            entrada queda asegurada hasta las 10:30 hs.
+            Enviá manualmente el correo de confirmación de presencialidad a los
+            correos con entradas activas.
           </p>
         </div>
 

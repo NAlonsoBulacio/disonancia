@@ -22,9 +22,6 @@ export const CONFIRMATION_MESSAGE =
 export const CONTRIBUTION_MESSAGE =
   "La entrada es gratuita, pero podés contribuir a la causa en este alias CICLO.DISONANCIA, a nombre de Nicolas Enrique Alonso";
 
-export const TICKET_GUARANTEE_MESSAGE =
-  "Tu entrada queda asegurada hasta las 10:30 hs. Después de ese horario puede liberarse para otra persona.";
-
 export const MAX_TOTAL_TICKETS = 176;
 export const MAX_TICKETS_PER_EMAIL = 1;
 export const MAX_TICKETS_LEGACY_PER_EMAIL = 3;
