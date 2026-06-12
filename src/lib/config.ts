@@ -26,13 +26,14 @@ export const MAX_TOTAL_TICKETS = 176;
 export const MAX_TICKETS_PER_EMAIL = 1;
 export const MAX_TICKETS_LEGACY_PER_EMAIL = 3;
 export const RETURN_LINK_EXPIRY_DAYS = 14;
+export const PUBLIC_TICKETS_CLOSED = true;
 
 export const TICKET_STATUS = {
   active: "active",
   released: "released",
 } as const;
 
-export const SOLD_OUT_TITLE = "SOLD OUT";
+export const SOLD_OUT_TITLE = "ENTRADAS AGOTADAS";
 export const SOLD_OUT_MESSAGE =
   "Comunicate con tu banda fav para la lista de espera.";
 

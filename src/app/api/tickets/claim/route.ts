@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { PUBLIC_TICKETS_CLOSED } from "@/lib/config";
 import { sendTicketsConfirmation } from "@/lib/mail";
 import { claimTickets } from "@/lib/tickets";
 
@@ -8,6 +9,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     const token = String(body.token ?? "");
     const quantity = Number(body.quantity ?? 0);
+
+    if (PUBLIC_TICKETS_CLOSED) {
+      return NextResponse.json(
+        { error: "Entradas agotadas.", available: 0 },
+        { status: 400 },
+      );
+    }
 
     if (!token) {
       return NextResponse.json(
